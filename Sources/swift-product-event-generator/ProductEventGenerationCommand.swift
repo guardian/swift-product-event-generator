@@ -1,5 +1,7 @@
 import ArgumentParser
 import Foundation
+import SwiftSyntax
+import SwiftSyntaxBuilder
 
 // MARK: - Code Generation
 
@@ -16,21 +18,15 @@ struct ProductEventGenerator {
             guard let attributes = event.attributes else { continue }
             for attr in attributes {
                 if let allowed = attr.allow {
-                    let enumName = enumTypeName(event: event.name, attribute: attr.name)
-                    content += "public enum \(enumName): String {\n"
-                    for value in allowed {
-                        content += "    case \(value)\n"
-                    }
-                    content += "}\n\n"
+                    let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(name:  enumTypeName(event: event.name, attribute: attr.name), type: "String", cases: allowed)
+                    content += enumSyntax.formatted().description
                 }
             }
         }
 
-        // ProductEvent struct
-        content += "public struct ProductEvent {\n"
-        content += "    public let name: String\n"
-        content += "    public let attributes: [String: String]\n"
-        content += "}\n\n"
+        let productEventSyntax = SwiftSyntaxGenerator.generateStructSyntax(name: "ProductEvent", properties: [("name", "String"), ("attributes", "[String: String]?")])
+
+        content += productEventSyntax.formatted().description
 
         // Extension with static factory methods
         content += "extension ProductEvent {\n\n"

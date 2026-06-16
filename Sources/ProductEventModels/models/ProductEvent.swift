@@ -2,14 +2,15 @@ import Foundation
 
 // AUTO-GENERATED - DO NOT EDIT 
 
+
 public enum NotificationSettingsOpenedSource: String {
     case settings
     case onboarding
 }
 
 public enum AutoplayToggledValue: String {
-    case true
-    case false
+    case `true`
+    case `false`
 }
 
 public enum AutoplayToggledSource: String {
@@ -18,8 +19,8 @@ public enum AutoplayToggledSource: String {
 }
 
 public enum MarkAsReadToggledValue: String {
-    case true
-    case false
+    case `true`
+    case `false`
 }
 
 public enum MiniplayerSeekValue: String {
@@ -29,9 +30,8 @@ public enum MiniplayerSeekValue: String {
 
 public struct ProductEvent {
     public let name: String
-    public let attributes: [String: String]
+    public let attributes: [String: String]?
 }
-
 extension ProductEvent {
 
     /// notification_settings_viewed
