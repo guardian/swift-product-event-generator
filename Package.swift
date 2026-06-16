@@ -5,6 +5,12 @@ import PackageDescription
 
 let package = Package(
     name: "swift-product-event-generator",
+    products: [
+        .library(
+            name: "SwiftProductEventModels",
+            targets: [""swift-product-event-generator]
+        )
+    ],
     dependencies: [
           .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
         ],
