@@ -19,12 +19,12 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "ProductEventModels"
-        )
+        ),
         .executableTarget(
             name: "swift-product-event-generator",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
-            path: "Sources"),
+            path: "Sources/swift-product-event-generator"),
     ]
 )
