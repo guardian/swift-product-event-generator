@@ -7,7 +7,7 @@ let package = Package(
     name: "swift-product-event-generator",
     products: [
         .library(
-            name: "ProductEventModels",
+            name: "swift-product-event-generator",
             targets: ["ProductEventModels"]
         )
     ],
