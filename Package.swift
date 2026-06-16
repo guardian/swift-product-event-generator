@@ -8,7 +8,7 @@ let package = Package(
     products: [
         .library(
             name: "SwiftProductEventModels",
-            targets: [""swift-product-event-generator]
+            targets: ["SwiftProductEventModels"]
         )
     ],
     dependencies: [
@@ -17,6 +17,9 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "SwiftProductEventModels"
+        )
         .executableTarget(
             name: "swift-product-event-generator",
             dependencies: [
