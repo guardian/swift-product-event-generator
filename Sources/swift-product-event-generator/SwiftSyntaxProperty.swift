@@ -24,6 +24,8 @@ public enum SwiftSyntaxGenerator {
         return DeclSyntax(structDecl)
     }
 
+    // TODO: add init with default nil for attributes
+
     static func generateEnumSyntax(name: String, type: String? = nil, cases: [String]) -> DeclSyntax {
         var inheritanceClause: InheritanceClauseSyntax?
         if let type {
@@ -49,7 +51,81 @@ public enum SwiftSyntaxGenerator {
             .with(\.trailingTrivia, .newlines(1)) // Adds a newline after the
         return DeclSyntax(enumDecl)
     }
-    
+
+    static func generateExtenstionSyntax(typeName: String, methods: [(name: String, params: [(name: String, type: String)], eventName: String, attrEntries: [(key: String, isEnum: Bool)]?)]
+    ) -> DeclSyntax {
+        let extensionDecl = ExtensionDeclSyntax(extendedType:
+                                                    IdentifierTypeSyntax(name: .identifier(typeName))
+        ) {
+            for method in methods {
+                let hasAttributes = method.attrEntries != nil
+                FunctionDeclSyntax(
+                    modifiers: DeclModifierListSyntax {
+                        DeclModifierSyntax(name: .keyword(.public))
+                        DeclModifierSyntax(name: .keyword(.static))
+                    },
+                    name: .identifier(method.name),
+                    signature: FunctionSignatureSyntax(parameterClause: FunctionParameterClauseSyntax {
+                        for (i, param) in method.params.enumerated() {
+                            FunctionParameterSyntax(
+                                firstName: .identifier(param.name),
+                                type: IdentifierTypeSyntax(name: .identifier(param.type)),
+                                trailingComma: i < method.params.count - 1 ? .commaToken() : nil
+                            )
+                            .with(\.leadingTrivia, .newline)
+                        }
+                    }
+                        .with(\.rightParen, .rightParenToken(leadingTrivia: method.params.isEmpty ? Trivia() : .newline)),
+                                                       returnClause:
+                                                        ReturnClauseSyntax(
+                                                            type: IdentifierTypeSyntax(name: .identifier(typeName))
+                                                        )
+                                                      )
+                ) {
+                    FunctionCallExprSyntax(
+                        calledExpression: DeclReferenceExprSyntax(baseName: .identifier(typeName)),
+                        leftParen: .leftParenToken(),
+                        arguments: LabeledExprListSyntax {
+                            LabeledExprSyntax(
+                                label: .identifier("name"),
+                                colon: .colonToken(),
+                                expression: StringLiteralExprSyntax(content: method.eventName),
+                                trailingComma: hasAttributes ? .commaToken() : nil
+                            )
+                            .with(\.leadingTrivia, .newline)
+                            if let attrEntries = method.attrEntries {
+                                LabeledExprSyntax(
+                                    label: .identifier("attributes"),
+                                    colon: .colonToken(),
+                                    expression: DictionaryExprSyntax {
+                                        for (i, entry) in attrEntries.enumerated() {
+                                            DictionaryElementSyntax(
+                                                key: StringLiteralExprSyntax(content: entry.key),
+                                                value: entry.isEnum ? ExprSyntax(
+                                                    MemberAccessExprSyntax(
+                                                        base: DeclReferenceExprSyntax(baseName: .identifier(entry.key)),
+                                                        name: .identifier("rawValue"))) :
+                                                    ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(entry.key))),
+                                                trailingComma: i < attrEntries.count - 1 ? .commaToken() : nil
+                                                )
+                                            .with(\.leadingTrivia, .newline)
+                                        }
+                                    }
+                                        .with(\.rightSquare, .rightSquareToken(leadingTrivia: .newline))
+                                )
+                                .with(\.leadingTrivia, .newline)
+                            }
+                        },
+                        rightParen: .rightParenToken(leadingTrivia: .newline)
+                    )
+                }
+            }
+        }
+            .with(\.leadingTrivia, .newlines(2))
+            .with(\.trailingTrivia, .newlines(1))
+        return DeclSyntax(extensionDecl)
+    }
+
     private static func safeCaseIdentifier(_ name: String) -> TokenSyntax {
         if name == "true" || name == "false" {
             return .identifier("`\(name)`")
