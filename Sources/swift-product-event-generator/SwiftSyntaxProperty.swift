@@ -18,13 +18,40 @@ public enum SwiftSyntaxGenerator {
                     )
                 }
             }
+
+            InitializerDeclSyntax(
+                modifiers: DeclModifierListSyntax {
+                    DeclModifierSyntax(name: .keyword(.public))
+                },
+                signature: FunctionSignatureSyntax(
+                    parameterClause: FunctionParameterClauseSyntax {
+                        for (i, (propertyName, propertyType)) in properties.enumerated() {
+                            FunctionParameterSyntax(
+                                firstName: .identifier(propertyName),
+                                type: IdentifierTypeSyntax(name: .identifier(propertyType)),
+                                defaultValue: propertyName == "attributes"
+                                    ? InitializerClauseSyntax(value: NilLiteralExprSyntax())
+                                    : nil,
+                                trailingComma: i < properties.count - 1 ? .commaToken() : nil
+                            )
+                        }
+                    }
+                )
+            ) {
+                for (propertyName, _) in properties {
+                    InfixOperatorExprSyntax(
+                        leftOperand: MemberAccessExprSyntax(
+                            base: DeclReferenceExprSyntax(baseName: .keyword(.self)),
+                            name: .identifier(propertyName)
+                        ),
+                        operator: AssignmentExprSyntax(),
+                        rightOperand: DeclReferenceExprSyntax(baseName: .identifier(propertyName))
+                    )
+                }
+            }
         }
-            .with(\.leadingTrivia, .newlines(1)) // Adds a newline before the
-            .with(\.trailingTrivia, .newlines(1)) // Adds a newline after the
         return DeclSyntax(structDecl)
     }
-
-    // TODO: add init with default nil for attributes
 
     static func generateEnumSyntax(name: String, type: String? = nil, cases: [String]) -> DeclSyntax {
         var inheritanceClause: InheritanceClauseSyntax?
@@ -119,10 +146,10 @@ public enum SwiftSyntaxGenerator {
                         rightParen: .rightParenToken(leadingTrivia: .newline)
                     )
                 }
+                .with(\.leadingTrivia, .newlines(2))
             }
         }
             .with(\.leadingTrivia, .newlines(2))
-            .with(\.trailingTrivia, .newlines(1))
         return DeclSyntax(extensionDecl)
     }
 
@@ -134,25 +161,3 @@ public enum SwiftSyntaxGenerator {
         }
     }
 }
-
-//public struct SwiftSyntaxProperty {
-//    let name: String
-//    let type: String
-//    let isOptional: Bool
-//    let isArray: Bool
-//
-//    public init(name: String, type: String, isOptional: Bool = false, isArray: Bool = false) {
-//        self.name = name
-//        self.type = type
-//        self.isOptional = isOptional
-//        self.isArray = isArray
-//    }
-//
-//    public static func optional(_ name: String, type: String) -> SwiftSyntaxProperty {
-//        return SwiftSyntaxProperty(name: name, type: type, isOptional: true, isArray: <#T##Bool#>)
-//    }
-//
-//    public static func optionalArray(_ name: String, type: String) -> SwiftSyntaxProperty {
-//        return SwiftSyntaxProperty(name: name, type: type, isOptional: true, isArray: true)
-//    }
-//}

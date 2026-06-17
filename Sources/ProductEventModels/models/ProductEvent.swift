@@ -27,19 +27,23 @@ public enum MiniplayerSeekValue: String {
     case forward
     case back
 }
-
 public struct ProductEvent {
     public let name: String
     public let attributes: [String: String]?
+    public init(name: String, attributes: [String: String]? = nil) {
+        self.name = name
+        self.attributes = attributes
+    }
 }
 
-
 extension ProductEvent {
+
     public static func notificationSettingsViewed() -> ProductEvent {
         ProductEvent(
             name: "notification_settings_viewed"
         )
     }
+
     public static func notificationSettingsOpened(
         source: NotificationSettingsOpenedSource
     ) -> ProductEvent {
@@ -50,6 +54,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func autoplayToggled(
         value: AutoplayToggledValue,
         source: AutoplayToggledSource
@@ -62,6 +67,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func markAsReadToggled(
         value: MarkAsReadToggledValue
     ) -> ProductEvent {
@@ -72,6 +78,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func minimisePlayer(
         value: String,
         source: String
@@ -84,6 +91,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func miniplayerSeek(
         value: MiniplayerSeekValue,
         source: String
@@ -96,6 +104,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func podcastPlay(
         value: String,
         source: String
@@ -108,6 +117,7 @@ extension ProductEvent {
             ]
         )
     }
+
     public static func podcastPause(
         value: String,
         source: String
