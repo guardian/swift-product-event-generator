@@ -29,16 +29,21 @@ struct ProductEventGenerator {
 
         content += productEventSyntax.formatted().description
 
-        let methods: [(name: String, params: [(name: String, type: String)], eventName: String, attrEntries: [(key: String, isEnum: Bool)]?)] = definitions.map { event in
+        let methods: [(
+            name: String,
+            params: [(name: String, type: String, description: String)],
+            eventName: String,
+            attrEntries: [(key: String, isEnum: Bool)]?,
+            description: String)] = definitions.map { event in
             let methodName = camelCase(for: event.name)
-            let params: [(name: String, type: String)] = event.attributes?.map { attr in
+            let params: [(name: String, type: String, description: String)] = event.attributes?.map { attr in
                 let type = attr.allow != nil ? enumTypeName(event: event.name, attribute: attr.name) : "String"
-                return (name: attr.name, type: type)
+                return (name: attr.name, type: type, description: attr.description)
             } ?? []
             let attrEntries: [(key: String, isEnum: Bool)]? = event.attributes?.map { attr in
                 (key: attr.name, isEnum: attr.allow != nil)
             }
-            return (name: methodName, params: params, eventName: event.name, attrEntries: attrEntries)
+            return (name: methodName, params: params, eventName: event.name, attrEntries: attrEntries, description: event.description)
         }
 
         let extensionDecl = SwiftSyntaxGenerator.generateExtenstionSyntax(

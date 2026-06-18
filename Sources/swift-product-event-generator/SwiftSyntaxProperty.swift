@@ -79,13 +79,29 @@ public enum SwiftSyntaxGenerator {
         return DeclSyntax(enumDecl)
     }
 
-    static func generateExtenstionSyntax(typeName: String, methods: [(name: String, params: [(name: String, type: String)], eventName: String, attrEntries: [(key: String, isEnum: Bool)]?)]
+    static func generateExtenstionSyntax(
+        typeName: String,
+        methods: [(
+            name: String,
+            params: [(
+                name: String,
+                type: String,
+                description: String
+            )],
+            eventName: String,
+            attrEntries: [(
+                key: String,
+                isEnum: Bool
+            )]?,
+            description: String
+        )]
     ) -> DeclSyntax {
         let extensionDecl = ExtensionDeclSyntax(extendedType:
                                                     IdentifierTypeSyntax(name: .identifier(typeName))
         ) {
             for method in methods {
                 let hasAttributes = method.attrEntries != nil
+                let docTrivia = buildMethodDocTrivia(description: method.description, params: method.params)
                 FunctionDeclSyntax(
                     modifiers: DeclModifierListSyntax {
                         DeclModifierSyntax(name: .keyword(.public))
@@ -146,7 +162,7 @@ public enum SwiftSyntaxGenerator {
                         rightParen: .rightParenToken(leadingTrivia: .newline)
                     )
                 }
-                .with(\.leadingTrivia, .newlines(2))
+                .with(\.leadingTrivia, docTrivia)
             }
         }
             .with(\.leadingTrivia, .newlines(2))
@@ -160,4 +176,40 @@ public enum SwiftSyntaxGenerator {
             return .identifier(name)
         }
     }
+
+    // MARK: Documentation helpers
+
+    private static func buildDocTrivia(description: String, newlinesBefore: Int = 1) -> Trivia {
+        var pieces: [TriviaPiece] = [.newlines(newlinesBefore)]
+        pieces.append(.docLineComment("/// \(description)"))
+        pieces.append(.newlines(1))
+        return Trivia(pieces: pieces)
+    }
+
+    private static func buildMethodDocTrivia(
+            description: String?,
+            params: [(name: String, type: String, description: String?)]
+        ) -> Trivia {
+            var pieces: [TriviaPiece] = [.newlines(2)]
+
+            if let description {
+                pieces.append(.docLineComment("/// \(description)"))
+                pieces.append(.newlines(1))
+            }
+
+            let paramsWithDescs = params.filter { $0.description != nil }
+            if !paramsWithDescs.isEmpty {
+                pieces.append(.docLineComment("///"))
+                pieces.append(.newlines(1))
+                pieces.append(.docLineComment("/// - Parameters:"))
+                pieces.append(.newlines(1))
+                for param in params {
+                    let paramDesc = param.description ?? param.name
+                    pieces.append(.docLineComment("///   - \(param.name): \(paramDesc)"))
+                    pieces.append(.newlines(1))
+                }
+            }
+
+            return Trivia(pieces: pieces)
+        }
 }

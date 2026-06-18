@@ -38,12 +38,17 @@ public struct ProductEvent {
 
 extension ProductEvent {
 
+    /// User has viewed notification settings
     public static func notificationSettingsViewed() -> ProductEvent {
         ProductEvent(
             name: "notification_settings_viewed"
         )
     }
 
+    /// User has opened notification settings
+    ///
+    /// - Parameters:
+    ///   - source: Which screen you open from
     public static func notificationSettingsOpened(
         source: NotificationSettingsOpenedSource
     ) -> ProductEvent {
@@ -55,6 +60,11 @@ extension ProductEvent {
         )
     }
 
+    /// User has enabled settings toggle
+    ///
+    /// - Parameters:
+    ///   - value: Which settings toggle
+    ///   - source: Which settings screen
     public static func autoplayToggled(
         value: AutoplayToggledValue,
         source: AutoplayToggledSource
@@ -68,6 +78,10 @@ extension ProductEvent {
         )
     }
 
+    /// User has enabled mark as read toggle
+    ///
+    /// - Parameters:
+    ///   - value: Which settings toggle
     public static func markAsReadToggled(
         value: MarkAsReadToggledValue
     ) -> ProductEvent {
@@ -79,6 +93,11 @@ extension ProductEvent {
         )
     }
 
+    /// User minimised the podcast player
+    ///
+    /// - Parameters:
+    ///   - value: URL of the podcast
+    ///   - source: Where event took place, eg. miniplayer
     public static func minimisePlayer(
         value: String,
         source: String
@@ -92,6 +111,11 @@ extension ProductEvent {
         )
     }
 
+    /// User seeked audio in miniplayer
+    ///
+    /// - Parameters:
+    ///   - value: Direction of seek
+    ///   - source: Where event took place, eg. miniplayer
     public static func miniplayerSeek(
         value: MiniplayerSeekValue,
         source: String
@@ -105,6 +129,11 @@ extension ProductEvent {
         )
     }
 
+    /// User played podcast
+    ///
+    /// - Parameters:
+    ///   - value: URL of the podcast
+    ///   - source: Where event took place, eg. miniplayer
     public static func podcastPlay(
         value: String,
         source: String
@@ -118,6 +147,11 @@ extension ProductEvent {
         )
     }
 
+    /// User paused podcast
+    ///
+    /// - Parameters:
+    ///   - value: URL of the podcast
+    ///   - source: Where event took place, eg. miniplayer
     public static func podcastPause(
         value: String,
         source: String
