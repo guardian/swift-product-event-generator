@@ -1,11 +1,14 @@
 import ArgumentParser
 import Foundation
+import SwiftSyntax
+import SwiftSyntaxBuilder
 
 // MARK: - Code Generation
 
 struct ProductEventGenerator {
 
     func generate(from definitions: [ProductEventDefinition], outputDir: String) throws {
+        let objectName = "ProductEvent"
         let fileManager = FileManager.default
         try fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 
@@ -16,66 +19,38 @@ struct ProductEventGenerator {
             guard let attributes = event.attributes else { continue }
             for attr in attributes {
                 if let allowed = attr.allow {
-                    let enumName = enumTypeName(event: event.name, attribute: attr.name)
-                    content += "public enum \(enumName): String {\n"
-                    for value in allowed {
-                        content += "    case \(value)\n"
-                    }
-                    content += "}\n\n"
+                    let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(name:  enumTypeName(event: event.name, attribute: attr.name), type: "String", cases: allowed)
+                    content += enumSyntax.formatted().description
                 }
             }
         }
 
-        // ProductEvent struct
-        content += "public struct ProductEvent {\n"
-        content += "    public let name: String\n"
-        content += "    public let attributes: [String: String]\n"
-        content += "}\n\n"
+        let productEventSyntax = SwiftSyntaxGenerator.generateStructSyntax(name: objectName, properties: [("name", "String"), ("attributes", "[String: String]?")])
 
-        // Extension with static factory methods
-        content += "extension ProductEvent {\n\n"
+        content += productEventSyntax.formatted().description
 
-        for event in definitions {
+        let methods: [(
+            name: String,
+            params: [(name: String, type: String, description: String)],
+            eventName: String,
+            attrEntries: [(key: String, isEnum: Bool)]?,
+            description: String)] = definitions.map { event in
             let methodName = camelCase(for: event.name)
-
-            // Build parameter list
-            let params = event.attributes?.compactMap { attr -> String in
+            let params: [(name: String, type: String, description: String)] = event.attributes?.map { attr in
                 let type = attr.allow != nil ? enumTypeName(event: event.name, attribute: attr.name) : "String"
-                return "\(attr.name): \(type)"
-            }.joined(separator: ", ")
-
-            // Build attributes dictionary entries
-            let attrEntries = event.attributes?.compactMap { attr -> String in
-                let valueExpr = attr.allow != nil ? "\(attr.name).rawValue" : attr.name
-                return "            \"\(attr.name)\": \(valueExpr)"
-            }.joined(separator: ",\n")
-
-            content += "    /// \(event.name)\n"
-            if let parameters = event.attributes {
-                content += "    /// - Parameters:\n"
-                for attr in parameters {
-                    content += "    ///   - \(attr.name): \(attr.description)\n"
-                }
+                return (name: attr.name, type: type, description: attr.description)
+            } ?? []
+            let attrEntries: [(key: String, isEnum: Bool)]? = event.attributes?.map { attr in
+                (key: attr.name, isEnum: attr.allow != nil)
             }
-            content += "    /// - Returns: A ProductEvent for \(event.name)\n"
-            content += "    public static func \(methodName)"
-            if let params {
-                content += "(\(params)) -> ProductEvent {\n"
-            } else {
-                content += "() -> ProductEvent {\n"
-            }
-            content += "        ProductEvent(\n"
-            content += "            name: \"\(event.name)\",\n"
-            if let attributeParameters = attrEntries  {
-                content += "            attributes: [\n"
-                content += "\(attributeParameters)\n"
-            }
-            content += "            ]\n"
-            content += "        )\n"
-            content += "    }\n\n"
+            return (name: methodName, params: params, eventName: event.name, attrEntries: attrEntries, description: event.description)
         }
 
-        content += "}\n"
+        let extensionDecl = SwiftSyntaxGenerator.generateExtenstionSyntax(
+            typeName: objectName,
+            methods: methods
+        )
+        content += extensionDecl.formatted().description
 
         let filePath = (outputDir as NSString).appendingPathComponent("ProductEvent.swift")
         try content.write(toFile: filePath, atomically: true, encoding: .utf8)
