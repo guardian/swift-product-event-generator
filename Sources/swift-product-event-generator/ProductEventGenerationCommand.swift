@@ -19,7 +19,11 @@ struct ProductEventGenerator {
             guard let attributes = event.attributes else { continue }
             for attr in attributes {
                 if let allowed = attr.allow {
-                    let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(name:  enumTypeName(event: event.name, attribute: attr.name), type: "String", cases: allowed)
+                    let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(
+                        name:  enumTypeName(event: event.name, attribute: attr.name),
+                        type: "String",
+                        cases: allowed.map { camelCase(for: $0) }
+                    )
                     content += enumSyntax.formatted().description
                 }
             }
