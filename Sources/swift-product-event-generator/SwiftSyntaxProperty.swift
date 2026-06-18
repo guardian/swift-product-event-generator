@@ -21,7 +21,7 @@ public enum SwiftSyntaxGenerator {
 
             InitializerDeclSyntax(
                 modifiers: DeclModifierListSyntax {
-                    DeclModifierSyntax(name: .keyword(.public))
+                    DeclModifierSyntax(name: .keyword(.fileprivate))
                 },
                 signature: FunctionSignatureSyntax(
                     parameterClause: FunctionParameterClauseSyntax {
@@ -49,6 +49,7 @@ public enum SwiftSyntaxGenerator {
                     )
                 }
             }
+            .with(\.leadingTrivia, .newlines(2))
         }
         return DeclSyntax(structDecl)
     }

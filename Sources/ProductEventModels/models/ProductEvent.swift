@@ -30,7 +30,8 @@ public enum MiniplayerSeekValue: String {
 public struct ProductEvent {
     public let name: String
     public let attributes: [String: String]?
-    public init(name: String, attributes: [String: String]? = nil) {
+
+    fileprivate init(name: String, attributes: [String: String]? = nil) {
         self.name = name
         self.attributes = attributes
     }
