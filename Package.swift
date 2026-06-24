@@ -33,5 +33,11 @@ let package = Package(
                 .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
             ],
             path: "Sources/swift-product-event-generator"),
+        .testTarget(
+            name: "ProductEventGeneratorTests",
+            dependencies: [
+                "swift-product-event-generator"
+            ]
+        ),
     ]
 )
