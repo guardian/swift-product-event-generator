@@ -14,8 +14,7 @@ public enum AutoplayToggledValue: String {
 }
 
 public enum AutoplayToggledSource: String {
-    case notificationSettings
-    case profileSettings
+    case settings
 }
 
 public enum MarkAsReadToggledValue: String {
