@@ -1,7 +1,6 @@
 import Foundation
 
-// AUTO-GENERATED - DO NOT EDIT 
-
+// AUTO-GENERATED - DO NOT EDIT
 
 public enum NotificationSettingsOpenedSource: String {
     case settings

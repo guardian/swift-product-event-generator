@@ -12,7 +12,12 @@ struct ProductEventGenerator {
         let fileManager = FileManager.default
         try fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 
-        var content = "import Foundation\n\n// AUTO-GENERATED - DO NOT EDIT \n\n"
+        let importDecl = ImportDeclSyntax(path: ImportPathComponentListSyntax {
+            ImportPathComponentSyntax(name: .identifier("Foundation"))
+
+        })
+            .with(\.trailingTrivia, .newlines(2) + .lineComment("// AUTO-GENERATED - DO NOT EDIT") + .newline)
+        var content = importDecl.formatted().description
 
         // Generate enums for constrained attributes
         for event in definitions {
