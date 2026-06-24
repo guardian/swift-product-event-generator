@@ -34,7 +34,13 @@ struct ProductEventGenerator {
             }
         }
 
-        let productEventSyntax = SwiftSyntaxGenerator.generateStructSyntax(name: objectName, properties: [("name", "String"), ("attributes", "[String: String]?")])
+        let productEventSyntax = SwiftSyntaxGenerator.generateStructSyntax(
+            name: objectName,
+            properties: [
+                ("name", "String"),
+                ("attributes", "[String: String]?")
+            ]
+        )
 
         content += productEventSyntax.formatted().description
 
@@ -45,14 +51,32 @@ struct ProductEventGenerator {
             attrEntries: [(key: String, isEnum: Bool)]?,
             description: String)] = definitions.map { event in
             let methodName = camelCase(for: event.name)
-            let params: [(name: String, type: String, description: String)] = event.attributes?.map { attr in
-                let type = attr.allow != nil ? enumTypeName(event: event.name, attribute: attr.name) : "String"
-                return (name: attr.name, type: type, description: attr.description)
+                let params: [(
+                    name: String,
+                    type: String,
+                    description: String
+                )] = event.attributes?.map { attr in
+                    let type = attr.allow != nil ? enumTypeName(
+                        event: event.name,
+                        attribute: attr.name
+                    ) : "String"
+                    return (
+                        name: attr.name,
+                        type: type,
+                        description: attr.description
+                    )
             } ?? []
             let attrEntries: [(key: String, isEnum: Bool)]? = event.attributes?.map { attr in
                 (key: attr.name, isEnum: attr.allow != nil)
             }
-            return (name: methodName, params: params, eventName: event.name, attrEntries: attrEntries, description: event.description)
+
+                return (
+                    name: methodName,
+                    params: params,
+                    eventName: event.name,
+                    attrEntries: attrEntries,
+                    description: event.description
+                )
         }
 
         let extensionDecl = SwiftSyntaxGenerator.generateExtenstionSyntax(
@@ -61,7 +85,7 @@ struct ProductEventGenerator {
         )
         content += extensionDecl.formatted().description
 
-        let filePath = (outputDir as NSString).appendingPathComponent("ProductEvent.swift")
+        let filePath = (outputDir as NSString).appendingPathComponent("\(objectName).swift")
         try content.write(toFile: filePath, atomically: true, encoding: .utf8)
         print("Generated: \(filePath)")
     }

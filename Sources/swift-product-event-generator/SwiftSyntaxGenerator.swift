@@ -9,16 +9,19 @@ public enum SwiftSyntaxGenerator {
             },
             name: TokenSyntax(stringLiteral: name)
         ) {
+            // MARK: Properties
             for (propertyName, propertyType) in properties {
                 VariableDeclSyntax(modifiers: DeclModifierListSyntax {
                     DeclModifierSyntax(name: .keyword(.public))
                 }, bindingSpecifier: .keyword(.let)) {
-                    PatternBindingSyntax(pattern: IdentifierPatternSyntax(identifier: .identifier(propertyName)),
-                                         typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: .identifier(propertyType)))
+                    PatternBindingSyntax(
+                        pattern: IdentifierPatternSyntax(identifier: .identifier(propertyName)),
+                        typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: .identifier(propertyType)))
                     )
                 }
             }
 
+            // MARK: Initialisation
             InitializerDeclSyntax(
                 modifiers: DeclModifierListSyntax {
                     DeclModifierSyntax(name: .keyword(.fileprivate))
@@ -69,14 +72,15 @@ public enum SwiftSyntaxGenerator {
             name: TokenSyntax(stringLiteral: name),
             inheritanceClause: inheritanceClause) {
                 for caseName in cases {
-                    EnumCaseDeclSyntax(elements: EnumCaseElementListSyntax {
-                        EnumCaseElementSyntax(name: safeCaseIdentifier(caseName))
-                    }
+                    EnumCaseDeclSyntax(
+                        elements: EnumCaseElementListSyntax {
+                            EnumCaseElementSyntax(name: safeCaseIdentifier(caseName))
+                        }
                     )
                 }
             }
-            .with(\.leadingTrivia, .newlines(1)) // Adds a newline before the
-            .with(\.trailingTrivia, .newlines(1)) // Adds a newline after the
+            .with(\.leadingTrivia, .newlines(1))
+            .with(\.trailingTrivia, .newlines(1))
         return DeclSyntax(enumDecl)
     }
 
