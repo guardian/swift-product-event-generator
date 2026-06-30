@@ -36,131 +36,156 @@ public struct ProductEvent {
 }
 
 extension ProductEvent {
+    public enum Settings {
 
-    /// User has viewed notification settings
-    public static func notificationSettingsViewed() -> ProductEvent {
-        ProductEvent(
-            name: "notification_settings_viewed"
-        )
+        /// User has viewed notification settings
+        public static func notificationSettingsViewed() -> ProductEvent {
+            ProductEvent(
+                name: "notification_settings_viewed"
+            )
+        }
+
+        /// User has opened notification settings
+        ///
+        /// - Parameters:
+        ///   - source: Which screen you open from
+        public static func notificationSettingsOpened(
+            source: NotificationSettingsOpenedSource
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "notification_settings_opened",
+                attributes: [
+                    "source": source.rawValue
+                ]
+            )
+        }
+
+        /// User has enabled settings toggle
+        ///
+        /// - Parameters:
+        ///   - value: Which settings toggle
+        ///   - source: Which settings screen
+        public static func autoplayToggled(
+            value: AutoplayToggledValue,
+            source: AutoplayToggledSource
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "autoplay_toggled",
+                attributes: [
+                    "value": value.rawValue,
+                    "source": source.rawValue
+                ]
+            )
+        }
+
+        /// User has enabled mark as read toggle
+        ///
+        /// - Parameters:
+        ///   - value: Which settings toggle
+        public static func markAsReadToggled(
+            value: MarkAsReadToggledValue
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "mark_as_read_toggled",
+                attributes: [
+                    "value": value.rawValue
+                ]
+            )
+        }
     }
+}
 
-    /// User has opened notification settings
-    ///
-    /// - Parameters:
-    ///   - source: Which screen you open from
-    public static func notificationSettingsOpened(
-        source: NotificationSettingsOpenedSource
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "notification_settings_opened",
-            attributes: [
-                "source": source.rawValue
-            ]
-        )
-    }
+extension ProductEvent {
+    public enum Miniplayer {
 
-    /// User has enabled settings toggle
-    ///
-    /// - Parameters:
-    ///   - value: Which settings toggle
-    ///   - source: Which settings screen
-    public static func autoplayToggled(
-        value: AutoplayToggledValue,
-        source: AutoplayToggledSource
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "autoplay_toggled",
-            attributes: [
-                "value": value.rawValue,
-                "source": source.rawValue
-            ]
-        )
-    }
+        /// User minimised the podcast player
+        ///
+        /// - Parameters:
+        ///   - value: URL of the podcast
+        ///   - source: Where event took place, eg. miniplayer
+        public static func minimisePlayer(
+            value: String,
+            source: String
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "minimise_player",
+                attributes: [
+                    "value": value,
+                    "source": source
+                ]
+            )
+        }
 
-    /// User has enabled mark as read toggle
-    ///
-    /// - Parameters:
-    ///   - value: Which settings toggle
-    public static func markAsReadToggled(
-        value: MarkAsReadToggledValue
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "mark_as_read_toggled",
-            attributes: [
-                "value": value.rawValue
-            ]
-        )
-    }
+        /// User maximised the podcast player
+        ///
+        /// - Parameters:
+        ///   - value: URL of the podcast
+        ///   - source: Where event took place, eg. miniplayer
+        public static func maximisePlayer(
+            value: String,
+            source: String
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "maximise_player",
+                attributes: [
+                    "value": value,
+                    "source": source
+                ]
+            )
+        }
 
-    /// User minimised the podcast player
-    ///
-    /// - Parameters:
-    ///   - value: URL of the podcast
-    ///   - source: Where event took place, eg. miniplayer
-    public static func minimisePlayer(
-        value: String,
-        source: String
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "minimise_player",
-            attributes: [
-                "value": value,
-                "source": source
-            ]
-        )
-    }
+        /// User seeked audio in miniplayer
+        ///
+        /// - Parameters:
+        ///   - value: Direction of seek
+        ///   - source: Where event took place, eg. miniplayer
+        public static func miniplayerSeek(
+            value: MiniplayerSeekValue,
+            source: String
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "miniplayer_seek",
+                attributes: [
+                    "value": value.rawValue,
+                    "source": source
+                ]
+            )
+        }
 
-    /// User seeked audio in miniplayer
-    ///
-    /// - Parameters:
-    ///   - value: Direction of seek
-    ///   - source: Where event took place, eg. miniplayer
-    public static func miniplayerSeek(
-        value: MiniplayerSeekValue,
-        source: String
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "miniplayer_seek",
-            attributes: [
-                "value": value.rawValue,
-                "source": source
-            ]
-        )
-    }
+        /// User played podcast
+        ///
+        /// - Parameters:
+        ///   - value: URL of the podcast
+        ///   - source: Where event took place, eg. miniplayer
+        public static func podcastPlay(
+            value: String,
+            source: String
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "podcast_play",
+                attributes: [
+                    "value": value,
+                    "source": source
+                ]
+            )
+        }
 
-    /// User played podcast
-    ///
-    /// - Parameters:
-    ///   - value: URL of the podcast
-    ///   - source: Where event took place, eg. miniplayer
-    public static func podcastPlay(
-        value: String,
-        source: String
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "podcast_play",
-            attributes: [
-                "value": value,
-                "source": source
-            ]
-        )
-    }
-
-    /// User paused podcast
-    ///
-    /// - Parameters:
-    ///   - value: URL of the podcast
-    ///   - source: Where event took place, eg. miniplayer
-    public static func podcastPause(
-        value: String,
-        source: String
-    ) -> ProductEvent {
-        ProductEvent(
-            name: "podcast_pause",
-            attributes: [
-                "value": value,
-                "source": source
-            ]
-        )
+        /// User paused podcast
+        ///
+        /// - Parameters:
+        ///   - value: URL of the podcast
+        ///   - source: Where event took place, eg. miniplayer
+        public static func podcastPause(
+            value: String,
+            source: String
+        ) -> ProductEvent {
+            ProductEvent(
+                name: "podcast_pause",
+                attributes: [
+                    "value": value,
+                    "source": source
+                ]
+            )
+        }
     }
 }

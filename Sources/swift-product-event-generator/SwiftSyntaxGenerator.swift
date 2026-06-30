@@ -84,8 +84,9 @@ public enum SwiftSyntaxGenerator {
         return DeclSyntax(enumDecl)
     }
 
-    static func generateExtenstionSyntax(
+    static func generateNamespacedExtensionSyntax(
         typeName: String,
+        namespace: String,
         methods: [(
             name: String,
             params: [(
@@ -101,76 +102,83 @@ public enum SwiftSyntaxGenerator {
             description: String
         )]
     ) -> DeclSyntax {
-        let extensionDecl = ExtensionDeclSyntax(extendedType:
-                                                    IdentifierTypeSyntax(name: .identifier(typeName))
+        let extensionDecl = ExtensionDeclSyntax(
+            extendedType: IdentifierTypeSyntax(name: .identifier(typeName))
         ) {
-            for method in methods {
-                let hasAttributes = method.attrEntries != nil
-                let docTrivia = buildMethodDocTrivia(description: method.description, params: method.params)
-                FunctionDeclSyntax(
-                    modifiers: DeclModifierListSyntax {
-                        DeclModifierSyntax(name: .keyword(.public))
-                        DeclModifierSyntax(name: .keyword(.static))
-                    },
-                    name: .identifier(method.name),
-                    signature: FunctionSignatureSyntax(parameterClause: FunctionParameterClauseSyntax {
-                        for (i, param) in method.params.enumerated() {
-                            FunctionParameterSyntax(
-                                firstName: .identifier(param.name),
-                                type: IdentifierTypeSyntax(name: .identifier(param.type)),
-                                trailingComma: i < method.params.count - 1 ? .commaToken() : nil
+            EnumDeclSyntax(
+                modifiers: DeclModifierListSyntax {
+                    DeclModifierSyntax(name: .keyword(.public))
+                },
+                name: TokenSyntax(stringLiteral: namespace)
+            ) {
+                for method in methods {
+                    let hasAttributes = method.attrEntries != nil
+                    let docTrivia = buildMethodDocTrivia(description: method.description, params: method.params)
+                    FunctionDeclSyntax(
+                        modifiers: DeclModifierListSyntax {
+                            DeclModifierSyntax(name: .keyword(.public))
+                            DeclModifierSyntax(name: .keyword(.static))
+                        },
+                        name: .identifier(method.name),
+                        signature: FunctionSignatureSyntax(
+                            parameterClause: FunctionParameterClauseSyntax {
+                                for (i, param) in method.params.enumerated() {
+                                    FunctionParameterSyntax(
+                                        firstName: .identifier(param.name),
+                                        type: IdentifierTypeSyntax(name: .identifier(param.type)),
+                                        trailingComma: i < method.params.count - 1 ? .commaToken() : nil
+                                    )
+                                    .with(\.leadingTrivia, .newline)
+                                }
+                            }
+                            .with(\.rightParen, .rightParenToken(leadingTrivia: method.params.isEmpty ? Trivia() : .newline)),
+                            returnClause: ReturnClauseSyntax(
+                                type: IdentifierTypeSyntax(name: .identifier(typeName))
                             )
-                            .with(\.leadingTrivia, .newline)
-                        }
-                    }
-                        .with(\.rightParen, .rightParenToken(leadingTrivia: method.params.isEmpty ? Trivia() : .newline)),
-                                                       returnClause:
-                                                        ReturnClauseSyntax(
-                                                            type: IdentifierTypeSyntax(name: .identifier(typeName))
-                                                        )
-                                                      )
-                ) {
-                    FunctionCallExprSyntax(
-                        calledExpression: DeclReferenceExprSyntax(baseName: .identifier(typeName)),
-                        leftParen: .leftParenToken(),
-                        arguments: LabeledExprListSyntax {
-                            LabeledExprSyntax(
-                                label: .identifier("name"),
-                                colon: .colonToken(),
-                                expression: StringLiteralExprSyntax(content: method.eventName),
-                                trailingComma: hasAttributes ? .commaToken() : nil
-                            )
-                            .with(\.leadingTrivia, .newline)
-                            if let attrEntries = method.attrEntries {
+                        )
+                    ) {
+                        FunctionCallExprSyntax(
+                            calledExpression: DeclReferenceExprSyntax(baseName: .identifier(typeName)),
+                            leftParen: .leftParenToken(),
+                            arguments: LabeledExprListSyntax {
                                 LabeledExprSyntax(
-                                    label: .identifier("attributes"),
+                                    label: .identifier("name"),
                                     colon: .colonToken(),
-                                    expression: DictionaryExprSyntax {
-                                        for (i, entry) in attrEntries.enumerated() {
-                                            DictionaryElementSyntax(
-                                                key: StringLiteralExprSyntax(content: entry.key),
-                                                value: entry.isEnum ? ExprSyntax(
-                                                    MemberAccessExprSyntax(
-                                                        base: DeclReferenceExprSyntax(baseName: .identifier(entry.key)),
-                                                        name: .identifier("rawValue"))) :
-                                                    ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(entry.key))),
-                                                trailingComma: i < attrEntries.count - 1 ? .commaToken() : nil
-                                                )
-                                            .with(\.leadingTrivia, .newline)
-                                        }
-                                    }
-                                        .with(\.rightSquare, .rightSquareToken(leadingTrivia: .newline))
+                                    expression: StringLiteralExprSyntax(content: method.eventName),
+                                    trailingComma: hasAttributes ? .commaToken() : nil
                                 )
                                 .with(\.leadingTrivia, .newline)
-                            }
-                        },
-                        rightParen: .rightParenToken(leadingTrivia: .newline)
-                    )
+                                if let attrEntries = method.attrEntries {
+                                    LabeledExprSyntax(
+                                        label: .identifier("attributes"),
+                                        colon: .colonToken(),
+                                        expression: DictionaryExprSyntax {
+                                            for (i, entry) in attrEntries.enumerated() {
+                                                DictionaryElementSyntax(
+                                                    key: StringLiteralExprSyntax(content: entry.key),
+                                                    value: entry.isEnum ? ExprSyntax(
+                                                        MemberAccessExprSyntax(
+                                                            base: DeclReferenceExprSyntax(baseName: .identifier(entry.key)),
+                                                            name: .identifier("rawValue"))) :
+                                                        ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(entry.key))),
+                                                    trailingComma: i < attrEntries.count - 1 ? .commaToken() : nil
+                                                )
+                                                .with(\.leadingTrivia, .newline)
+                                            }
+                                        }
+                                        .with(\.rightSquare, .rightSquareToken(leadingTrivia: .newline))
+                                    )
+                                    .with(\.leadingTrivia, .newline)
+                                }
+                            },
+                            rightParen: .rightParenToken(leadingTrivia: .newline)
+                        )
+                    }
+                    .with(\.leadingTrivia, docTrivia)
                 }
-                .with(\.leadingTrivia, docTrivia)
             }
         }
-            .with(\.leadingTrivia, .newlines(2))
+        .with(\.leadingTrivia, .newlines(2))
         return DeclSyntax(extensionDecl)
     }
 
