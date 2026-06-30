@@ -1,5 +1,5 @@
 import Testing
-@testable import swift_product_event_generator
+@testable import swift_product_event_code_generator
 
 struct SwiftSyntaxGeneratorTests {
 
@@ -48,13 +48,15 @@ struct SwiftSyntaxGeneratorTests {
                 )
             ]
 
-            let result = SwiftSyntaxGenerator.generateExtenstionSyntax(
+            let result = SwiftSyntaxGenerator.generateNamespacedExtensionSyntax(
                 typeName: "ProductEvent",
+                namespace: "Example",
                 methods: methods
             )
             let output = result.formatted().description
 
             assert(output.contains("extension ProductEvent"))
+            assert(output.contains("public enum Example"))
             assert(output.contains("public static func screenView"))
             assert(output.contains("/// Tracks screen views"))
             assert(output.contains("/// - Parameters:"))
@@ -74,8 +76,9 @@ struct SwiftSyntaxGeneratorTests {
             (name: "appOpen", params: [], eventName: "app_open", attrEntries: nil, description: "User has opened the app")
         ]
 
-        let result = SwiftSyntaxGenerator.generateExtenstionSyntax(
+        let result = SwiftSyntaxGenerator.generateNamespacedExtensionSyntax(
             typeName: "ProductEvent",
+            namespace: "example",
             methods: methods
         )
         let output = result.formatted().description

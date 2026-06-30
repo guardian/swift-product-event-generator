@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import swift_product_event_generator
+@testable import swift_product_event_code_generator
 
 struct ProductEventDefinitionTests {
 
