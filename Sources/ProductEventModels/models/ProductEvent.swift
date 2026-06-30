@@ -110,6 +110,24 @@ extension ProductEvent {
         )
     }
 
+    /// User maximised the podcast player
+    ///
+    /// - Parameters:
+    ///   - value: URL of the podcast
+    ///   - source: Where event took place, eg. miniplayer
+    public static func maximisePlayer(
+        value: String,
+        source: String
+    ) -> ProductEvent {
+        ProductEvent(
+            name: "maximise_player",
+            attributes: [
+                "value": value,
+                "source": source
+            ]
+        )
+    }
+
     /// User seeked audio in miniplayer
     ///
     /// - Parameters:
