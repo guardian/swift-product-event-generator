@@ -7,29 +7,30 @@ import SwiftSyntaxBuilder
 
 struct ProductEventGenerator {
 
-    func generate(from definitions: [ProductEventDefinition], outputDir: String) throws {
+    func generate(from groupedDefinitions: [(namespace: String, definitions: [ProductEventDefinition])], outputDir: String) throws {
         let objectName = "ProductEvent"
         let fileManager = FileManager.default
         try fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
 
         let importDecl = ImportDeclSyntax(path: ImportPathComponentListSyntax {
             ImportPathComponentSyntax(name: .identifier("Foundation"))
-
         })
             .with(\.trailingTrivia, .newlines(2) + .lineComment("// AUTO-GENERATED - DO NOT EDIT") + .newline)
         var content = importDecl.formatted().description
 
-        // Generate enums for constrained attributes
-        for event in definitions {
-            guard let attributes = event.attributes else { continue }
-            for attr in attributes {
-                if let allowed = attr.allow {
-                    let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(
-                        name:  enumTypeName(event: event.name, attribute: attr.name),
-                        type: "String",
-                        cases: allowed.map { camelCase(for: $0) }
-                    )
-                    content += enumSyntax.formatted().description
+        // Generate enums for constrained attributes across all groups
+        for group in groupedDefinitions {
+            for event in group.definitions {
+                guard let attributes = event.attributes else { continue }
+                for attr in attributes {
+                    if let allowed = attr.allow {
+                        let enumSyntax = SwiftSyntaxGenerator.generateEnumSyntax(
+                            name: enumTypeName(event: event.name, attribute: attr.name),
+                            type: "String",
+                            cases: allowed.map { camelCase(for: $0) }
+                        )
+                        content += enumSyntax.formatted().description
+                    }
                 }
             }
         }
@@ -44,32 +45,22 @@ struct ProductEventGenerator {
 
         content += productEventSyntax.formatted().description
 
-        let methods: [(
-            name: String,
-            params: [(name: String, type: String, description: String)],
-            eventName: String,
-            attrEntries: [(key: String, isEnum: Bool)]?,
-            description: String)] = definitions.map { event in
-            let methodName = camelCase(for: event.name)
-                let params: [(
-                    name: String,
-                    type: String,
-                    description: String
-                )] = event.attributes?.map { attr in
-                    let type = attr.allow != nil ? enumTypeName(
-                        event: event.name,
-                        attribute: attr.name
-                    ) : "String"
-                    return (
-                        name: attr.name,
-                        type: type,
-                        description: attr.description
-                    )
-            } ?? []
-            let attrEntries: [(key: String, isEnum: Bool)]? = event.attributes?.map { attr in
-                (key: attr.name, isEnum: attr.allow != nil)
-            }
-
+        // Generate a namespaced enum per file group
+        for group in groupedDefinitions {
+            let methods: [(
+                name: String,
+                params: [(name: String, type: String, description: String)],
+                eventName: String,
+                attrEntries: [(key: String, isEnum: Bool)]?,
+                description: String)] = group.definitions.map { event in
+                let methodName = camelCase(for: event.name)
+                let params: [(name: String, type: String, description: String)] = event.attributes?.map { attr in
+                    let type = attr.allow != nil ? enumTypeName(event: event.name, attribute: attr.name) : "String"
+                    return (name: attr.name, type: type, description: attr.description)
+                } ?? []
+                let attrEntries: [(key: String, isEnum: Bool)]? = event.attributes?.map { attr in
+                    (key: attr.name, isEnum: attr.allow != nil)
+                }
                 return (
                     name: methodName,
                     params: params,
@@ -77,13 +68,15 @@ struct ProductEventGenerator {
                     attrEntries: attrEntries,
                     description: event.description
                 )
-        }
+            }
 
-        let extensionDecl = SwiftSyntaxGenerator.generateExtenstionSyntax(
-            typeName: objectName,
-            methods: methods
-        )
-        content += extensionDecl.formatted().description
+            let namespacedExtension = SwiftSyntaxGenerator.generateNamespacedExtensionSyntax(
+                typeName: objectName,
+                namespace: group.namespace,
+                methods: methods
+            )
+            content += namespacedExtension.formatted().description
+        }
 
         let filePath = (outputDir as NSString).appendingPathComponent("\(objectName).swift")
         try content.write(toFile: filePath, atomically: true, encoding: .utf8)
@@ -106,6 +99,12 @@ struct ProductEventGenerator {
     private func enumTypeName(event: String, attribute: String) -> String {
         structName(for: event).replacingOccurrences(of: "Event", with: "") + attribute.prefix(1).uppercased() + attribute.dropFirst()
     }
+
+    private func namespaceName(from fileName: String) -> String {
+        let base = fileName.replacingOccurrences(of: ".json", with: "")
+        let parts = base.split(separator: "_")
+        return parts.map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
+    }
 }
 
 // MARK: - Command
@@ -127,12 +126,21 @@ struct ProductEventGenerationCommand: ParsableCommand {
             print("No JSON files found in \(input)")
             return
         }
-        var allDefinitions: [ProductEventDefinition] = []
+
+        var groupedDefinitions: [(namespace: String, definitions: [ProductEventDefinition])] = []
+
         for file in jsonFiles {
             let data = try Data(contentsOf: file)
             let definitions = try JSONDecoder().decode([ProductEventDefinition].self, from: data)
-            allDefinitions.append(contentsOf: definitions)
+            let namespace = namespaceName(from: file.deletingPathExtension().lastPathComponent)
+            groupedDefinitions.append((namespace: namespace, definitions: definitions))
         }
-        try ProductEventGenerator().generate(from: allDefinitions, outputDir: output)
+
+        try ProductEventGenerator().generate(from: groupedDefinitions, outputDir: output)
+    }
+
+    private func namespaceName(from fileName: String) -> String {
+        let parts = fileName.split(separator: "_")
+        return parts.map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
     }
 }
